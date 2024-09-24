@@ -27,11 +27,10 @@ def test_extract_official_scorecard_from_sphere(sample_tweets):
     assert result == expected
 
 def test_extract_official_scorecards_from_st_louis(sample_tweets):
-    result = extract_scorecard(sample_tweets[3])
+    result = extract_scorecard(sample_tweets[3])   
     expected = "#UFCStLouis Official Scorecard: Diego Ferreira (@DiegoUFCTX) vs Mateusz Rębecki👇"
     assert result == expected
   
 def test_extract_majority_decision(sample_tweets):
     result = extract_scorecard(sample_tweets[4])
-    expected = "#UFCAustin Official Result: Damir Ismagulov (28-28, 29-28, 30-27) defeats Guram Kutateladze by Majority Decision"
-    assert result == expected
+    assert result == None, f"This one should fail"

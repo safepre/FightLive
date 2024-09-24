@@ -29,7 +29,7 @@ def extract_fighter_names(text):
 def clean_name(name):
     name = re.split(r'\s+ruled\s+a\s+', name)[0]
     name = re.sub(r'\(@\w+\)', '', name)
-    name = re.sub(r'\n.*', '', name)  # Remove everything after a newline
+    name = re.sub(r'\n.*', '', name) 
     name = re.sub(r'[^\w\s\'\-\.\u0100-\uFFFF]', '', name)
     return name.strip()
 
