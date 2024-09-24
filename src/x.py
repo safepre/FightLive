@@ -1,34 +1,56 @@
 import time
 import os
 import re
+from dotenv import load_dotenv
 from discord_webhook import DiscordWebhook, DiscordEmbed
 from tweety import Twitter
-
+load_dotenv()
 DISCORD_WEBHOOK_URL = os.getenv("WEBHOOK_URL")
 auth_token = os.getenv("AUTH_TOKEN")
 CHECK_INTERVAL = 600 
 app = Twitter("session")
 app.load_auth_token(auth_token)
-formatted_fights = []
-processed_tweets = set() 
+
+def extract_fighter_names(text):
+    patterns = [
+        r'(?:Scorecard|Result):\s*([\w\s\'\-\.]+?)\s+(?:vs\.?|and)\s+([\w\s\'\-\.\u0100-\uFFFF]+?)(?=\s*(?:\(|$|\n|[^\w\s\-\.]))',
+        r'([\w\s\'\-\.]+?)\s+(?:\(@\w+\))?\s+(?:vs\.?|and)\s+([\w\s\'\-\.\u0100-\uFFFF]+?)(?=\s*(?:\n\n|$|\n|👇))',
+        r'([\w\s\'\-\.]+?)(?:\s+\(@\w+\))?\s+(?:vs\.?|and)\s+([\w\s\'\-\.\u0100-\uFFFF]+?)(?=\s*(?:👇|$|\n))'
+    ]
+
+    for pattern in patterns:
+        matches = re.findall(pattern, text, re.IGNORECASE | re.MULTILINE)
+        if matches:
+            name1, name2 = matches[0]
+            return (clean_name(name1), clean_name(name2))
+
+    return None
+
+def clean_name(name):
+    name = re.split(r'\s+ruled\s+a\s+', name)[0]
+    name = re.sub(r'\(@\w+\)', '', name)
+    name = re.sub(r'\n.*', '', name)  # Remove everything after a newline
+    name = re.sub(r'[^\w\s\'\-\.\u0100-\uFFFF]', '', name)
+    return name.strip()
 
 def extract_official_results(text):
-    pattern = r"(#UFC\w+\s+Official\s+Result(?:\s+&\s+Scorecard)?.*?)(?=\n|$)"
+    pattern = r"(#UFC(?:\d+|\w+)\s+(?:Official\s+)?(?:Result|Scorecard).*?)(?=\n|$)"
     match = re.search(pattern, text)
     if match:
         return [match.group(1).strip()]
     return []
+
 def extract_scorecard(tweet_text):
-    pattern = r"(#UFC\d+\s+(?:Official\s+)?(?:Result|Scorecard).*?)(?=\n|$)"
+    pattern = r"(#UFC(?:\d+|\w+)\s+Official\s+(?:(?:Result\s+&\s+)?Scorecard).*?)(?=\n|$)"
     match = re.search(pattern, tweet_text, re.MULTILINE)
     if match:
-        return match.group(0).strip()
+        return match.group(1).strip()
     return None
 
 def ufc_fight_message():
-    global formatted_fights
     global processed_tweets
     user_tweets = list(app.get_tweets("UFCNews"))
+    formatted_fights = []
     message = ""
     new_tweets_found = False
     
@@ -70,7 +92,7 @@ def send_to_discord(message):
     results = extract_official_results(message)
     cleaned_message = "\n\n".join(results)
     if cleaned_message == "":
-        return
+        return "No new fight updates at this time."
     embed = DiscordEmbed(title="Fight Live Update", description=cleaned_message, color="03b2f8")
     
     for url in image_urls:
@@ -80,6 +102,7 @@ def send_to_discord(message):
     webhook.execute()
 
 def main():
+    processed_tweets = set()
     while True:
         message = ufc_fight_message()
         if message != "No new fight updates at this time.":
