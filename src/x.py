@@ -4,12 +4,28 @@ import re
 from dotenv import load_dotenv
 from discord_webhook import DiscordWebhook, DiscordEmbed
 from tweety import Twitter
+
 load_dotenv()
 DISCORD_WEBHOOK_URL = os.getenv("WEBHOOK_URL")
 auth_token = os.getenv("AUTH_TOKEN")
 CHECK_INTERVAL = 600 
 app = Twitter("session")
 app.load_auth_token(auth_token)
+
+
+def finish_by_round_one(text):
+    pattern = r"by\s+((?:Technical\s+)?(?:TKO|KO|Submission))(?:,\s+[^,]+?)?(?:,?\s+(?:at|in)?\s*(?:\d+:\d+\s*(?:of|in))?\s*)?(?:Round|R)\s*1"
+    match = re.search(pattern, text, re.IGNORECASE)
+    if match:
+        return match.group(0)
+    return None
+
+def extract_finish_method(text):
+    pattern = r"by\s+((?:Technical\s+)?(?:TKO|KO|Submission))(?:,\s+[^,]+?)?(?:,?\s+(?:at|in)?\s*(?:\d+:\d+\s*(?:of|in))?\s*)?(?:Round|R)\s*1"
+    match = re.search(pattern, text, re.IGNORECASE)
+    if match:
+        return match.group(1)
+    return None
 
 def extract_fighter_names(text):
     patterns = [
@@ -53,7 +69,6 @@ def ufc_fight_message():
     formatted_fights = []
     message = ""
     new_tweets_found = False
-    
     for i, tweet in enumerate(user_tweets):
         scorecard_line = extract_scorecard(tweet.text)
         if scorecard_line and i + 1 < len(user_tweets) and tweet.id not in processed_tweets:
@@ -76,7 +91,16 @@ def ufc_fight_message():
                 })
             processed_tweets.add(tweet.id) 
         else:
-            continue
+            isRoundOneFinish = finish_by_round_one(tweet.text)
+            if isRoundOneFinish:
+                formatted_fights.append({
+                    "live_detail": tweet.text,
+                    "scorecard_media": []
+                })
+                processed_tweets.add(tweet.id)
+            else:
+                continue
+          
     if new_tweets_found:
         for fight in formatted_fights:
             message += f"{fight['live_detail']}\n"
