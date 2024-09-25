@@ -1,15 +1,17 @@
 from discord_webhook import DiscordWebhook, DiscordEmbed
 import time
 import re
+import os
 from tweety import Twitter
-DISCORD_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
-auth_token = os.getenv("TWITTER_AUTH_TOKEN")
-CHECK_INTERVAL = 600 # Check every 10 minutes (600 seconds )
+from dotenv import load_dotenv
+load_dotenv()
+DISCORD_WEBHOOK_URL = os.getenv("WEBHOOK_URL")
+auth_token = os.getenv("AUTH_TOKEN")
+CHECK_INTERVAL = 900 # Check every 15 minutes (900 seconds )
 app = Twitter("session")
 app.load_auth_token(auth_token)
-formatted_fights = []
 keyword = "Official Result:"
-
+processed_tweets = set()
 def extract_scorecard(tweet_text):
     pattern = r'^.*[Ss]corecard.*$'
     match = re.search(pattern, tweet_text, re.MULTILINE)
@@ -18,10 +20,10 @@ def extract_scorecard(tweet_text):
     return None
 
 def dwcs_fight_message():
-    global formatted_fights
     global processed_tweets
     user_tweets = list(app.get_tweets("UFCNews"))
     message = ""
+    formatted_fights = []
     new_tweets_found = False
     
     for i, tweet in enumerate(user_tweets):
@@ -102,7 +104,7 @@ def extract_official_results(text):
 def main():
     processed_tweets = set()
     while True:
-        message = ufc_fight_message()
+        message = dwcs_fight_message()
         if message != "No new fight updates at this time.":
             send_to_discord(message)
         else:
