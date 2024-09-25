@@ -1,5 +1,5 @@
 import pytest
-from src.x import extract_official_results
+from src.text_processing import extract_official_results
 
 @pytest.fixture
 def sample_tweets():

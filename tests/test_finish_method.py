@@ -1,5 +1,5 @@
 import pytest
-from src.x import finish_by_round_one, extract_finish_method
+from src.text_processing import finish_by_round_one, extract_finish_method
 
 @pytest.fixture
 def sample_tweets():

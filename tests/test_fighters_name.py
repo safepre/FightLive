@@ -1,5 +1,5 @@
 import pytest
-from src.x import extract_fighter_names
+from src.text_processing import extract_fighter_names
 
 @pytest.fixture
 def sample_tweets():

@@ -1,5 +1,5 @@
 import pytest
-from src.x import extract_scorecard
+from src.text_processing import extract_scorecard
 
 @pytest.fixture
 def sample_tweets():
