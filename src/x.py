@@ -74,7 +74,7 @@ def ufc_fight_message():
         if scorecard_line and i + 1 < len(user_tweets) and tweet.id not in processed_tweets:
             new_tweets_found = True
             tweet_detail = app.tweet_detail(tweet.id)
-            prev_tweet = user_tweets[i + 1]
+            prev_tweet = tweet.text if 'Official Result & Scorecard' not in tweet.text else user_tweets[i + 1]
             scorecard_media = [{
                 'preview_image_url': pic.media_url_https
             } for pic in tweet_detail.media]

@@ -13,7 +13,7 @@ def sample_tweets():
         "#UFC298 Official Result: Marcos Rogerio de Lima (@Pezao011) defeats Junior Tafa by TKO at 1:14 in Round 2. \n\nAll Fight Results ➡️: https://ufc.ac/4bzUZr3"
     ]
 
-def test_extract_finish_method(sample_tweets):
+def test_finish_by_round_one(sample_tweets):
     assert finish_by_round_one(sample_tweets[0]) == "by TKO at 4:39 of Round 1"
     assert finish_by_round_one(sample_tweets[1]) == "by Submission at 2:39 in Round 1"
     assert finish_by_round_one(sample_tweets[2]) == "by KO, Round 1"
@@ -23,3 +23,9 @@ def test_extract_not_round_one(sample_tweets):
     assert finish_by_round_one(sample_tweets[4]) == None
     assert finish_by_round_one(sample_tweets[5]) == None
     assert finish_by_round_one(sample_tweets[6]) == None
+
+def test_extract_finish_method(sample_tweets):
+    assert extract_finish_method(sample_tweets[0]) == "TKO"
+    assert extract_finish_method(sample_tweets[1]) == "Submission"
+    assert extract_finish_method(sample_tweets[2]) == "KO"
+    assert extract_finish_method(sample_tweets[3]) == "Technical Submission"
