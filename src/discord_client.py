@@ -1,10 +1,11 @@
 import re
 from discord_webhook import DiscordWebhook, DiscordEmbed
 from config import DISCORD_WEBHOOK_URL
-from text_processing import extract_official_results
+from text_processing import extract_official_results, extract_finish_method
 
 def send_to_discord(message):
     webhook = DiscordWebhook(url=DISCORD_WEBHOOK_URL)
+    finishes = extract_finish_method(message)
     image_urls = re.findall(r'https?://\S+\.jpg', message)
     results = extract_official_results(message)
     cleaned_message = "\n\n".join(results)
