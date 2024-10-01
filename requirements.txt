@@ -2,4 +2,6 @@ tweety-ns
 discord-webhook
 pytest
 load_dotenv
-httpx[http2]  
+httpx[http2]
+alembic
+psycopg2-binary
