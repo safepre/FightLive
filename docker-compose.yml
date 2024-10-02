@@ -1,13 +1,6 @@
 version: '3.8'
 
 services:
-  app:
-    build: .
-    depends_on:
-      - db
-    env_file:
-      - .env
-
   db:
     image: postgres:13
     environment:
