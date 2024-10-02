@@ -10,7 +10,8 @@ class Fighter(Base):
     date_created = Column(DateTime(timezone=True), server_default=func.now())
     full_name = Column(String, nullable=False, unique=True)
     
-    fights = relationship("Fight", back_populates="fighter")
+    fights_as_fighter = relationship("Fight", back_populates="fighter", foreign_keys="Fight.fighter_id")
+    fights_as_opponent = relationship("Fight", back_populates="opponent", foreign_keys="Fight.opponent_id")
 
 class Scorecard(Base):
     __tablename__ = 'scorecards'
@@ -30,6 +31,6 @@ class Fight(Base):
     opponent_id = Column(Integer, ForeignKey('fighters.id'), nullable=False)
     scorecard_id = Column(Integer, ForeignKey('scorecards.id'), nullable=False)
 
-    fighter = relationship("Fighter", foreign_keys=[fighter_id], back_populates="fights")
-    opponent = relationship("Fighter", foreign_keys=[opponent_id])
+    fighter = relationship("Fighter", foreign_keys=[fighter_id], back_populates="fights_as_fighter")
+    opponent = relationship("Fighter", foreign_keys=[opponent_id], back_populates="fights_as_opponent")
     scorecard = relationship("Scorecard", back_populates="fight")
