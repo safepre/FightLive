@@ -1,5 +1,5 @@
 import time
-from src.config import CHECK_INTERVAL, DB_URL
+from src.config import CHECK_INTERVAL, DB_URL, X_ACCOUNT
 from src.twitter_client import TwitterClient
 from src.text_processing import extract_scorecard, extract_official_results, finish_by_round_one, extract_fighter_names
 from src.discord_client import send_to_discord
@@ -15,7 +15,7 @@ processed_tweets = set()
 
 def ufc_fight_message(twitter_client):
     global processed_tweets
-    user_tweets = twitter_client.get_tweets("testingman111")
+    user_tweets = twitter_client.get_tweets(X_ACCOUNT)
     formatted_fights = []
     message = ""
     new_tweets_found = False
