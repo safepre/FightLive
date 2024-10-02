@@ -16,9 +16,9 @@ def extract_finish_method(text):
 
 def extract_fighter_names(text):
     patterns = [
-        r'(?:Scorecard|Result):\s*([\w\s\'\-\.]+?)\s+(?:vs\.?|and)\s+([\w\s\'\-\.\u0100-\uFFFF]+?)(?=\s*(?:\(|$|\n|[^\w\s\-\.]))',
-        r'([\w\s\'\-\.]+?)\s+(?:\(@\w+\))?\s+(?:vs\.?|and)\s+([\w\s\'\-\.\u0100-\uFFFF]+?)(?=\s*(?:\n\n|$|\n|👇))',
-        r'([\w\s\'\-\.]+?)(?:\s+\(@\w+\))?\s+(?:vs\.?|and)\s+([\w\s\'\-\.\u0100-\uFFFF]+?)(?=\s*(?:👇|$|\n))'
+        r'(?:Scorecard|Result):\s*([\w\s\'\’\-\.]+?)\s+(?:vs\.?|and)\s+([\w\s\'\’\-\.\u0100-\uFFFF]+?)(?=\s*(?:\(|$|\n|[^\w\s\-\.]))',
+        r'([\w\s\'\’\-\.]+?)\s+(?:\(@\w+\))?\s+(?:vs\.?|and)\s+([\w\s\’\'\-\.\u0100-\uFFFF]+?)(?=\s*(?:\n\n|$|\n|👇))',
+        r'([\w\s\'\’\-\.]+?)(?:\s+\(@\w+\))?\s+(?:vs\.?|and)\s+([\w\s\’\'\-\.\u0100-\uFFFF]+?)(?=\s*(?:👇|$|\n))'
     ]
 
     for pattern in patterns:
@@ -37,15 +37,15 @@ def clean_name(name):
     return name.strip()
 
 def extract_official_results(text):
-    pattern = r"(#UFC(?:\d+|\w+)\s+(?:Official\s+)?(?:Result|Scorecard).*?)(?=\n|$)"
+    pattern = r"^[^#\n]*?(#UFC(?:\d+|\w+)\s+(?:Official\s+)?(?:Result).*?)(?=\n|$)"
     match = re.search(pattern, text)
     if match:
-        return [match.group(1).strip()]
-    return []
+        return match.group(1).strip()
+    return ""
 
 def extract_scorecard(tweet_text):
-    pattern = r"(#UFC(?:\d+|\w+)\s+Official\s+(?:(?:Result\s+&\s+)?Scorecard).*?)(?=\n|$)"
-    match = re.search(pattern, tweet_text, re.MULTILINE)
+    pattern = r"^[^#\n]*?(#UFC(?:\d+|\w+)\s+Official\s+(?:(?:Result\s+&\s+)?Scorecard).*?)(?=\n|$)"
+    match = re.search(pattern, tweet_text)
     if match:
         return match.group(1).strip()
     return None

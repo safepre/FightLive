@@ -1,5 +1,5 @@
 from tweety import Twitter
-from config import AUTH_TOKEN
+from src.config import AUTH_TOKEN
 
 class TwitterClient:
     def __init__(self):
