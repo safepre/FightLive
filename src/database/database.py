@@ -21,10 +21,3 @@ try:
 except Exception as e:
     logger.error(f"Error creating database connection: {str(e)}")
     raise
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
