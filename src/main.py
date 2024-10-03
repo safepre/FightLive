@@ -12,7 +12,6 @@ from sqlalchemy import and_
 
 processed_tweets = set()
 
-
 def ufc_fight_message(twitter_client):
     global processed_tweets
     user_tweets = twitter_client.get_tweets(X_ACCOUNT)
@@ -34,18 +33,18 @@ def ufc_fight_message(twitter_client):
             scorecard_line = extract_scorecard(tweet_text)
             official_result = extract_official_results(tweet_text)
 
-            if (scorecard_line or official_result) and not finish_by_round_one(tweet_text):            
+            if (scorecard_line or official_result):           
                 result_tweets = [tweet]
                 for j in range(1, 4):
                     if i + j < len(user_tweets):
                         next_tweet = user_tweets[i + j]
                         next_tweet_text = next_tweet.text if hasattr(next_tweet, 'text') else ""
-                        if (scorecard_line and extract_official_results(next_tweet_text)) or (official_result and extract_scorecard(next_tweet_text)):
+                        if ((scorecard_line and extract_official_results(next_tweet_text)) or (official_result and extract_scorecard(next_tweet_text))) and not next_tweet.id in processed_tweets: 
                             result_tweets.append(next_tweet)
                             break
                 
                 if len(result_tweets) > 1:
-                  
+                    
                     new_tweets_found = True
                     scorecard_tweet = next((t for t in result_tweets if extract_scorecard(t.text)), None)
                     result_tweet = next((t for t in result_tweets if extract_official_results(t.text)), None)
@@ -113,21 +112,21 @@ def ufc_fight_message(twitter_client):
                         })
                         for t in result_tweets:
                             processed_tweets.add(t.id)
-            else:
-                isRoundOneFinish = finish_by_round_one(tweet_text)
-                if isRoundOneFinish:
+                else:
                     new_tweets_found = True
                     formatted_fights.append({
                         "result": tweet_text,
                         "scorecard_media": []
                     })
                     processed_tweets.add(tweet_id)
-
         if new_tweets_found:
             for fight in formatted_fights:
                 message += f"Result: {fight['result']}\n"
-                for media in fight['scorecard_media']:
-                    message += f"Scorecard Image: {media['preview_image_url']}\n"
+                if fight['scorecard_media']:
+                    for media in fight['scorecard_media']:
+                        message += f"Scorecard Image: {media['preview_image_url']}\n"
+                else:
+                    message += "No scorecard available\n"
                 message += "\n"
             return message
         else:
