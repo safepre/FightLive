@@ -53,8 +53,7 @@ FightLive is a streamlined tool that fetches live updates from UFCNews and deliv
    pytest tests/FILENAME.py
    ```
 ##  Contributing
-
-We welcome contributions from the community! If you're passionate about UFC and coding, consider contributing to this project.
+Feel free to contribute
 
 1. **Fork the Repository**
 2. **Create a Feature Branch**
