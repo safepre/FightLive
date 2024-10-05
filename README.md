@@ -8,7 +8,7 @@ FightLive is a streamlined tool that fetches live updates from UFCNews and deliv
 <img width="559" alt="Screenshot 2024-10-05 at 1 20 29 AM" src="https://github.com/user-attachments/assets/7e012935-27ba-4192-a623-2824b9baa4c1">
 
 
-### Installation
+## Installation
 
 #### make sure to set up venv before you install the dependencies
 1. **Clone the Repository**
