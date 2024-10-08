@@ -54,9 +54,11 @@ def ufc_fight_message(twitter_client):
                         print(f"Found scorecard and result tweet: {scorecard_tweet.text[:100]}...")
                         tweet_detail = twitter_client.get_tweet_detail(scorecard_tweet.id)
                         print('tweet_detail', tweet_detail)
-                        scorecard_media = [{
-                            'preview_image_url': pic.media_url_https
-                        } for pic in tweet_detail.media] if hasattr(tweet_detail, 'media') else []
+                        scorecard_media = []
+                        if hasattr(tweet_detail, 'media'):
+                            for media in tweet_detail.media:
+                                if hasattr(media, 'media_url_https'):
+                                    scorecard_media.append({'preview_image_url': media.media_url_https})
                         
                         fighter_names = extract_fighter_names(scorecard_tweet.text) 
                         print(f"Extracted fighter names: {fighter_names}")
@@ -116,16 +118,15 @@ def ufc_fight_message(twitter_client):
                     new_tweets_found = True
                     formatted_fights.append({
                         "result": tweet_text,
-                        "scorecard_media": []
+                        "scorecard_media": "Scorecard not available"
                     })
-                    processed_tweets.add(tweet_id)
         if new_tweets_found:
             for fight in formatted_fights:
-                message += f"Result: {fight['result']}\n"
-                if fight['scorecard_media']:
+                message += f"Result: {fight.get('result', 'N/A')}\n"
+                if isinstance(fight.get('scorecard_media'), list):
                     for media in fight['scorecard_media']:
-                        message += f"Scorecard Image: {media['preview_image_url']}\n"
-                else:
+                        message += f"Scorecard Image: {media.get('preview_image_url', 'N/A')}\n"
+                elif fight.get('scorecard_media') == "Scorecard not available":
                     message += "No scorecard available\n"
                 message += "\n"
             return message
@@ -162,10 +163,18 @@ def main():
     while True:
         try:
             message = ufc_fight_message(twitter_client)
-            if message != "No new fight updates at this time.":
+            print(f"Generated message: {message}")  # Add this line for debugging
+
+            if 'No scorecard available' in message and 'Round 1' not in message:
+                time.sleep(300) #5 minutes
+                message = ufc_fight_message(twitter_client)
+                print("Sending message to Discord after 5 minutes")
+                send_to_discord(message)
+            elif message != "No new fight updates at this time.":
+                print("Sending message to Discord")
                 send_to_discord(message)
             else:
                 print(message)
         except Exception as e:
-            print(f"An error occurred: {str(e)}")
+            print(f"An error occurred in main loop: {str(e)}")
         time.sleep(CHECK_INTERVAL)
