@@ -9,8 +9,10 @@ from src.database.models import Fighter, Scorecard, Fight
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import create_engine, text
 from sqlalchemy import and_
-
+from src.utils import is_first_round_finish, is_new_fight_update
 processed_tweets = set()
+round_one_finishes = set()
+
 
 def ufc_fight_message(twitter_client):
     global processed_tweets
@@ -163,15 +165,15 @@ def main():
     while True:
         try:
             message = ufc_fight_message(twitter_client)
-            print(f"Generated message: {message}")  # Add this line for debugging
 
             if 'No scorecard available' in message and 'Round 1' not in message:
-                time.sleep(300) #5 minutes
+                time.sleep(180) #3 minutes
                 message = ufc_fight_message(twitter_client)
-                print("Sending message to Discord after 5 minutes")
                 send_to_discord(message)
-            elif message != "No new fight updates at this time.":
-                print("Sending message to Discord")
+            elif is_new_fight_update(message) and is_first_round_finish(message) and message not in round_one_finishes:
+                send_to_discord(message)
+                round_one_finishes.add(message)
+            elif is_new_fight_update(message) and message not in round_one_finishes:
                 send_to_discord(message)
             else:
                 print(message)
