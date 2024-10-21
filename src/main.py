@@ -1,7 +1,7 @@
 import time
 from src.config import CHECK_INTERVAL, DB_URL, X_ACCOUNT
 from src.twitter_client import TwitterClient
-from src.text_processing import extract_scorecard, extract_official_results, finish_by_round_one, extract_fighter_names
+from src.text_processing import extract_scorecard, extract_official_results, finish_by_round_one, extract_fighter_names, extract_result_names
 from src.discord_client import send_to_discord
 from sqlalchemy.orm import Session
 from src.database.database import SessionLocal
@@ -10,6 +10,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import create_engine, text
 from sqlalchemy import and_
 from src.utils import is_first_round_finish, is_new_fight_update
+
 processed_tweets = set()
 round_one_finishes = set()
 
@@ -20,7 +21,7 @@ def ufc_fight_message(twitter_client):
     formatted_fights = []
     message = ""
     new_tweets_found = False
-
+    is_single_tweet = False
     db = SessionLocal()
     print("Database session created")
 
@@ -34,24 +35,32 @@ def ufc_fight_message(twitter_client):
 
             scorecard_line = extract_scorecard(tweet_text)
             official_result = extract_official_results(tweet_text)
-
             if (scorecard_line or official_result):           
                 result_tweets = [tweet]
-                for j in range(1, 4):
-                    if i + j < len(user_tweets):
-                        next_tweet = user_tweets[i + j]
-                        next_tweet_text = next_tweet.text if hasattr(next_tweet, 'text') else ""
-                        if ((scorecard_line and extract_official_results(next_tweet_text)) or (official_result and extract_scorecard(next_tweet_text))) and not next_tweet.id in processed_tweets: 
-                            result_tweets.append(next_tweet)
-                            break
+                if official_result and 'Complete Scorecards' in tweet_text:
+                    is_single_tweet = True
+                    single_scorecard_media = []
+                    single_tweet_detail = twitter_client.get_tweet_detail(tweet.id)
+                    if hasattr(single_tweet_detail, 'media'):
+                        for media in single_tweet_detail.media:
+                            if hasattr(media, 'media_url_https'):
+                                single_scorecard_media.append({'preview_image_url': media.media_url_https})
+                                print('after line 58 single_scorecard_media', single_scorecard_media)
+                                break
+
+                if not is_single_tweet:
+                    for j in range(1, 4):
+                        if i + j < len(user_tweets):
+                            next_tweet = user_tweets[i + j]
+                            next_tweet_text = next_tweet.text if hasattr(next_tweet, 'text') else ""
+                            if ((scorecard_line and extract_official_results(next_tweet_text)) or (official_result and extract_scorecard(next_tweet_text))) and not next_tweet.id in processed_tweets: 
+                                result_tweets.append(next_tweet)
+                                break
                 
                 if len(result_tweets) > 1:
-                    
                     new_tweets_found = True
                     scorecard_tweet = next((t for t in result_tweets if extract_scorecard(t.text)), None)
                     result_tweet = next((t for t in result_tweets if extract_official_results(t.text)), None)
-                    print('scorecard_tweet', scorecard_tweet.text)
-                    print('result_tweet', result_tweet.text)
                     if scorecard_tweet and result_tweet:
                         print(f"Found scorecard and result tweet: {scorecard_tweet.text[:100]}...")
                         tweet_detail = twitter_client.get_tweet_detail(scorecard_tweet.id)
@@ -116,6 +125,61 @@ def ufc_fight_message(twitter_client):
                         })
                         for t in result_tweets:
                             processed_tweets.add(t.id)
+                elif is_single_tweet:
+                    print('is_single_tweet detected')
+                    new_tweets_found = True
+                    fighter_names = extract_result_names(tweet.text) 
+                    print(f"Extracted fighter names: {fighter_names}")
+                    if fighter_names:
+                        fighter1_name, fighter2_name = fighter_names
+                        print(f"Extracted fighter names: {fighter1_name} vs {fighter2_name}")
+
+                        try:
+                            fighter1 = get_or_create_fighter(db, fighter1_name)
+                            fighter2 = get_or_create_fighter(db, fighter2_name)
+
+                            scorecard_link = single_scorecard_media[0]['preview_image_url'] if single_scorecard_media else None
+                            existing_scorecard = db.query(Scorecard).filter(Scorecard.link == scorecard_link).first()
+                            
+                            if existing_scorecard:
+                                scorecard = existing_scorecard
+                                print(f"Existing scorecard found with link: {scorecard_link}")
+                            else:
+                                scorecard = Scorecard(link=scorecard_link)
+                                db.add(scorecard)
+                                db.flush()
+                                print(f"New scorecard added with link: {scorecard_link}")
+
+                            existing_fight = db.query(Fight).filter(
+                                and_(
+                                    Fight.fighter_id == fighter1.id,
+                                    Fight.opponent_id == fighter2.id,
+                                    Fight.scorecard_id == scorecard.id
+                                    )
+                                ).first()
+
+                            if existing_fight:
+                                print(f"Fight already exists: {fighter1.full_name} vs {fighter2.full_name}")
+                            else:
+                                fight = Fight(fighter_id=fighter1.id, opponent_id=fighter2.id, scorecard_id=scorecard.id)
+                                db.add(fight)
+                                print(f"New fight added: {fighter1.full_name} vs {fighter2.full_name}")
+
+                            db.commit()
+                            print("Database changes committed")
+                        except SQLAlchemyError as e:
+                            db.rollback()
+                            print(f"Database error: {str(e)}")
+                            print("Database changes rolled back")
+                        except Exception as e:
+                            db.rollback()
+                            print(f"Unexpected error: {str(e)}")
+                            print("Database changes rolled back")
+                    processed_tweets.add(tweet.id)
+                    formatted_fights.append({
+                        "result": extract_official_results(tweet.text),
+                        "scorecard_media": single_scorecard_media
+                    })
                 else:
                     new_tweets_found = True
                     formatted_fights.append({
