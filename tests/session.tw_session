@@ -1,0 +1,49 @@
+{
+    "cookies": "auth_token=bfe694966af7b175eaf70b4314eb59ce90da2611;ct0=8ace4c4b0e0b4a8c057fcfe56f0c09425b08710b3f2abc13d8fc6ad15a8452a4b8836be58672b05a9642ad03bc64bccc924c947f3a48ddd579322e62826082288b2033915c402c639ca0c8f4abb2c5b1;",
+    "user": {
+        "id": "1834833577349201923",
+        "rest_id": "1834833577349201923",
+        "created_at": "2024-09-14 05:56:43+00:00",
+        "date": "2024-09-14 05:56:43+00:00",
+        "entities": {
+            "description": {
+                "urls": []
+            }
+        },
+        "description": null,
+        "bio": null,
+        "fast_followers_count": "0",
+        "favourites_count": "20",
+        "followers_count": "0",
+        "friends_count": "3",
+        "has_custom_timelines": "False",
+        "is_translator": "False",
+        "listed_count": "0",
+        "location": null,
+        "media_count": "1",
+        "name": "Testing Man",
+        "normal_followers_count": "0",
+        "subscriptions_count": "0",
+        "profile_banner_url": null,
+        "profile_image_url_https": "https://pbs.twimg.com/profile_images/1834833639546535938/dTp3uP-__normal.png",
+        "profile_interstitial_type": null,
+        "protected": "False",
+        "screen_name": "testingman111",
+        "username": "testingman111",
+        "statuses_count": "2",
+        "translator_type": "none",
+        "verified": "False",
+        "can_dm": "True",
+        "following": "False",
+        "followed_by": "False",
+        "community_role": null,
+        "notifications_enabled": "False",
+        "notifications": "False",
+        "possibly_sensitive": "False",
+        "pinned_tweets": null,
+        "profile_url": "https://twitter.com/testingman111",
+        "is_blocked": "False",
+        "blocked_by": "False",
+        "has_blocked_me": "False"
+    }
+}

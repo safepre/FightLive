@@ -30,11 +30,17 @@ def ufc_fight_message(twitter_client):
             tweet_text = tweet.text if hasattr(tweet, 'text') else ""
             tweet_id = tweet.id if hasattr(tweet, 'id') else None
 
-            if tweet_id in processed_tweets:
+             if tweet_id in processed_tweets:
                 continue
 
             scorecard_line = extract_scorecard(tweet_text)
             official_result = extract_official_results(tweet_text)
+            
+            if not (scorecard_line or official_result):
+                continue
+                
+            processed_tweets.add(tweet_id)
+
             if (scorecard_line or official_result):           
                 result_tweets = [tweet]
                 if official_result and 'Complete Scorecards' in tweet_text:
@@ -123,8 +129,7 @@ def ufc_fight_message(twitter_client):
                             "result": extract_official_results(result_tweet.text),
                             "scorecard_media": scorecard_media
                         })
-                        for t in result_tweets:
-                            processed_tweets.add(t.id)
+
                 elif is_single_tweet:
                     print('is_single_tweet detected')
                     new_tweets_found = True
@@ -175,7 +180,6 @@ def ufc_fight_message(twitter_client):
                             db.rollback()
                             print(f"Unexpected error: {str(e)}")
                             print("Database changes rolled back")
-                    processed_tweets.add(tweet.id)
                     formatted_fights.append({
                         "result": extract_official_results(tweet.text),
                         "scorecard_media": single_scorecard_media

@@ -13,7 +13,9 @@ def sample_tweets():
         "#UFC267 Official Scorecard: Elizeu Zaleski dos Santos (@ElizeuCapoeira) vs Benoit Saint-Denis \n\nAll Scorecards: https://ufc.com/news/official-scorecards-ufc-267-dos-santos-vs-saint-denis",
         "#UFC297 Official Scorecard: Chris Curtis vs Marc-Andre Barriault 👇 \n\nAll Scorecards ➡️: https://ufc.com/news/official-",
         "#UFC306 Official Scorecard: Raul Rosas Jr. vs Aoriqileng \n\nComplete Scorecards From @RiyadhSeaso #NocheUFC ➡️: https://ufc.com/news/official-",
-        "#UFCLongIsland Official Scorecards: Matt Schnell (@DANGER_Caged) vs Sumudaerji \n\nAll Long Island Scorecards ➡️: https://ufc.com/news/official-"
+        "#UFCLongIsland Official Scorecards: Matt Schnell (@DANGER_Caged) vs Sumudaerji \n\nAll Long Island Scorecards ➡️: https://ufc.com/news/official-",
+        "#UFC306 Official Scorecard: Sean O’Malley vs Merab Dvalishvili (@MerabDvalishvil)",
+        "#UFC307 Official Scorecard: Julianna Peña vs Raquel Pennington \n\nComplete Results ➡️ https://ufc.ac/3NeEXrK"
     ]
 
 def test_extract_fighter_names(sample_tweets):
@@ -27,7 +29,9 @@ def test_extract_fighter_names(sample_tweets):
         ("Elizeu Zaleski dos Santos", "Benoit Saint-Denis"),
         ("Chris Curtis", "Marc-Andre Barriault"),
         ("Raul Rosas Jr.", "Aoriqileng"),
-        ("Matt Schnell", "Sumudaerji")
+        ("Matt Schnell", "Sumudaerji"),
+        ("Sean O’Malley", "Merab Dvalishvili"),
+        ("Julianna Peña", "Raquel Pennington")
     ]
     
     for tweet, expected in zip(sample_tweets, expected_results):
