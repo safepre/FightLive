@@ -74,11 +74,3 @@ def find_submission(tweets, submission_types_file):
                 found_submissions.add(submission_type)
     submissions_list = list(found_submissions)
     return submissions_list[0] if submissions_list else None
-
-def extract_result_names(text):
-    pattern = r"#UFC\w+\s+Official\s+Result:\s*([\w\s\'\’\-\.]+?)\s+\(@\w+\s+[\d\-,\s]+\)\s+defeats\s*([\w\s\'\’\-\.]+?)\s+by"
-    match = re.search(pattern, text)
-    if match:
-        winner, loser = match.groups()
-        return (clean_name(winner), clean_name(loser))
-    return None
