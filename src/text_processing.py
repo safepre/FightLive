@@ -37,14 +37,31 @@ def clean_name(name):
     return name.strip()
 
 def extract_official_results(text):
-    pattern = r"^[^#\n]*?(#UFC(?:\d+|\w+)\s+(?:Official\s+)?(?:Result).*?)(?=\n|$)"
-    match = re.search(pattern, text)
-    if match:
-        return match.group(1).strip()
+    if re.search(r'#UFC\w+\s+[Oo]ff?i?c?i?a?l?\s+[Ss]corecard(?:s)?(?:\s|:)', text, re.IGNORECASE):
+        print("Skipping scorecard tweet")
+        return ""
+
+    patterns = [
+        r"#UFC\d+\s+[Oo]ff?i?c?i?a?l?\s+[Rr]esult:\s*[\w\s\'\-\.]+?\s*\(@[\w\s\-,]+\s+[\d\-,\s]+\)\s+defeats\s+[\w\s\-\'\.]+?\s+by\s+(?:Split|Unanimous)\s*Decision",
+        
+        r"^[^#\n]*?(#UFC(?:\d+|\w+)\s+[Oo]ff?i?c?i?a?l?\s+[Rr]esult:.*?)(?=\n|$)",
+    ]
+    
+    for pattern in patterns:
+        match = re.search(pattern, text, re.IGNORECASE)
+        if match:
+            result = match.group(0) if match.groups() == () else match.group(1)
+            result = result.strip()
+            # Double check it's not a scorecard
+            if not any(word in result.upper() for word in ['SCORECARD', 'SCORECARDS']):
+                print(f"Found valid result: {result}")
+                return result
+            
+    print(f"No valid result found in: {text[:100]}...")
     return ""
 
 def extract_scorecard(tweet_text):
-    pattern = r"^[^#\n]*?(#UFC(?:\d+|\w+)\s+Official\s+(?:(?:Result\s+&\s+)?Scorecard).*?)(?=\n|$)"
+    pattern = r"^[^#\n]*?(#UFC(?:\d+|\w+)\s+[Oo]ff?i?c?i?a?l?\s+(?:(?:[Rr]esult\s+&\s+)?[Ss]corecard).*?)(?=\n|$)"
     match = re.search(pattern, tweet_text)
     if match:
         return match.group(1).strip()
@@ -74,3 +91,34 @@ def find_submission(tweets, submission_types_file):
                 found_submissions.add(submission_type)
     submissions_list = list(found_submissions)
     return submissions_list[0] if submissions_list else None
+
+def extract_result_names(text):
+    pattern = r"#UFC\w+\s+Official\s+Result:\s*([\w\s\'\’\-\.]+?)\s+\(@\w+\s+[\d\-,\s]+\)\s+defeats\s*([\w\s\'\’\-\.]+?)\s+by"
+    match = re.search(pattern, text)
+    if match:
+        winner, loser = match.groups()
+        return (clean_name(winner), clean_name(loser))
+    return None
+
+def is_first_round_finish(text):
+    pattern = r"(?:KO|TKO|Submission).*?Round 1"
+    return bool(re.search(pattern, text, re.IGNORECASE))
+
+def extract_result_fighters(text):
+    """
+    Extracts fighter names from an official result tweet.
+    Example: "#UFC309 Official Result: Fighter1 (@Fighter1) defeats Fighter2 by TKO"
+    Returns: tuple(fighter1, fighter2) or None if no match
+    """
+    pattern = r"#UFC\d+\s+[Oo]ff?i?c?i?a?l?\s+[Rr]esult:\s*([\w\s\'\-\.]+?)\s*\(@[\w\s\-,]+\)\s+defeats\s+([\w\s\'\-\.]+?)\s+by"
+    
+    match = re.search(pattern, text, re.IGNORECASE)
+    if match:
+        winner, loser = match.groups()
+        winner = clean_name(winner)
+        loser = clean_name(loser)
+        print(f"Found fighters: Winner - {winner}, Loser - {loser}")
+        return (winner, loser)
+    
+    print("No fighters found in result tweet")
+    return None

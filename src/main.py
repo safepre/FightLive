@@ -122,10 +122,10 @@ def ufc_fight_message(twitter_client):
     db = SessionLocal()
     try:
         collected_tweets = []
-        for _, tweet_batch in twitter_client.get_tweets_iter(X_ACCOUNT):
-            for i, tweet in enumerate(tweet_batch):
-                if len(collected_tweets) >= MAX_NUMBER_OF_TWEETS:
-                    break
+        async for _, tweet_batch in twitter_client.iter_tweets("UFCNews"):
+            for i, tweet in enumerate(tweet_batch, 1):
+                print(f"Tweet: {tweet.text[:200]}...")
+                print(f"Tweet ID: {tweet.id}")
 
                 tweet_text = tweet.text if hasattr(tweet, 'text') else ""
                 tweet_id = tweet.id if hasattr(tweet, 'id') else None
@@ -190,22 +190,24 @@ def ufc_fight_message(twitter_client):
     finally:
         db.close()
 
-def main():
+async def main():
     print(f"Attempting to connect to database with URL: {DB_URL}")
     engine = create_engine(DB_URL)
     try:
         with engine.connect() as connection:
             result = connection.execute(text("SELECT 1"))
+            print(f"Database connection successful. Result: {result.fetchone()}")
     except Exception as e:
         print(f"Database connection failed. Error: {str(e)}")
 
-    twitter_client = TwitterClient()
+    twitter_client = await TwitterClient().initialize()
+    
     while True:
         try:
-            message = ufc_fight_message(twitter_client)
+            message = await ufc_fight_message(twitter_client)
             print(f"\nReceived message: {message}")
             if is_new_fight_update(message) and message not in processed_fights:
-                send_to_discord(message)
+                await send_to_discord(message)
                 processed_fights.add(message)
                 if len(processed_fights) > 1000:
                     processed_fights.clear()
@@ -213,7 +215,11 @@ def main():
                 print('No new updates to process')
                 
         except Exception as e:
-            time.sleep(30)
+            print(f"An error occurred in main loop: {str(e)}")
+            await asyncio.sleep(30)
             continue
             
-        time.sleep(180) #3 minutes
+        await asyncio.sleep(180)
+
+if __name__ == "__main__":
+    asyncio.run(main())
