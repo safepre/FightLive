@@ -2,6 +2,9 @@ from tweety import TwitterAsync
 from src.config import AUTH_TOKEN
 
 class TwitterClient:
+    def __init__(self):
+        self.app = None
+
     async def initialize(self):
         self.app = TwitterAsync("session")
         await self.app.load_auth_token(AUTH_TOKEN)
