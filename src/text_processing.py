@@ -1,5 +1,6 @@
 import re
 
+
 def finish_by_round_one(text):
     pattern = r"by\s+((?:Technical\s+)?(?:TKO|KO|Submission))(?:,\s+[^,]+?)?(?:,?\s+(?:at|in)?\s*(?:\d+:\d+\s*(?:of|in))?\s*)?(?:Round|R)\s*1"
     match = re.search(pattern, text, re.IGNORECASE)
@@ -14,11 +15,12 @@ def extract_finish_method(text):
         return match.group(1)
     return None
 
-def extract_fighter_names(text):
+def extract_scorecard_names(text):
+
     patterns = [
         r'(?:Scorecard|Result):\s*([\w\s\'\’\-\.]+?)\s+(?:vs\.?|and)\s+([\w\s\'\’\-\.\u0100-\uFFFF]+?)(?=\s*(?:\(|$|\n|[^\w\s\-\.]))',
         r'([\w\s\'\’\-\.]+?)\s+(?:\(@\w+\))?\s+(?:vs\.?|and)\s+([\w\s\’\'\-\.\u0100-\uFFFF]+?)(?=\s*(?:\n\n|$|\n|👇))',
-        r'([\w\s\'\’\-\.]+?)(?:\s+\(@\w+\))?\s+(?:vs\.?|and)\s+([\w\s\’\'\-\.\u0100-\uFFFF]+?)(?=\s*(?:👇|$|\n))'
+        r'([\w\s\'\’\-\.]+?)(?:\s+\(@\w+\))?\s+(?:vs\.?|and)\s+([\w\s\’\'\-\.\u0100-\uFFFF]+?)(?=\s*(?:$|\n))'
     ]
 
     for pattern in patterns:
@@ -28,7 +30,6 @@ def extract_fighter_names(text):
             return (clean_name(name1), clean_name(name2))
 
     return None
-
 def clean_name(name):
     name = re.split(r'\s+ruled\s+a\s+', name)[0]
     name = re.sub(r'\(@\w+\)', '', name)
@@ -52,7 +53,6 @@ def extract_official_results(text):
         if match:
             result = match.group(0) if match.groups() == () else match.group(1)
             result = result.strip()
-            # Double check it's not a scorecard
             if not any(word in result.upper() for word in ['SCORECARD', 'SCORECARDS']):
                 print(f"Found valid result: {result}")
                 return result
@@ -61,6 +61,7 @@ def extract_official_results(text):
     return ""
 
 def extract_scorecard(tweet_text):
+    # Made pattern more flexible to handle typos and case variations
     pattern = r"^[^#\n]*?(#UFC(?:\d+|\w+)\s+[Oo]ff?i?c?i?a?l?\s+(?:(?:[Rr]esult\s+&\s+)?[Ss]corecard).*?)(?=\n|$)"
     match = re.search(pattern, tweet_text)
     if match:
@@ -101,24 +102,49 @@ def extract_result_names(text):
     return None
 
 def is_first_round_finish(text):
+    # Should return True only if there's a finish (KO, TKO, Submission) in Round 1
     pattern = r"(?:KO|TKO|Submission).*?Round 1"
     return bool(re.search(pattern, text, re.IGNORECASE))
 
 def extract_result_fighters(text):
     """
     Extracts fighter names from an official result tweet.
-    Example: "#UFC309 Official Result: Fighter1 (@Fighter1) defeats Fighter2 by TKO"
-    Returns: tuple(fighter1, fighter2) or None if no match
+    Handles multiple formats of result tweets including no contests.
     """
-    pattern = r"#UFC\d+\s+[Oo]ff?i?c?i?a?l?\s+[Rr]esult:\s*([\w\s\'\-\.]+?)\s*\(@[\w\s\-,]+\)\s+defeats\s+([\w\s\'\-\.]+?)\s+by"
+    patterns = [
+        # Pattern for tweets with Twitter handle after first fighter
+        r"#UFC\w+\s+[Oo]ff?i?c?i?a?l?\s+[Rr]esult:\s*([\w\s\'\-\.]+?)\s*\(@[\w\s\-,]+\)\s+defeats\s+([\w\s\'\-\.]+?)(?:\s+by|\s*👇|\s*$)",
+        # Pattern for tweets without Twitter handle
+        r"#UFC\w+\s+[Oo]ff?i?c?i?a?l?\s+[Rr]esult:\s*([\w\s\'\-\.]+?)\s+defeats\s+([\w\s\'\-\.]+?)(?:\s+by|\s*👇|\s*$)",
+        # Pattern for tweets with Twitter handle after second fighter
+        r"#UFC\w+\s+[Oo]ff?i?c?i?a?l?\s+[Rr]esult:\s*([\w\s\'\-\.]+?)\s+defeats\s+([\w\s\'\-\.]+?)\s*\(@[\w\s\-,]+\)",
+        # Pattern for no contest results
+        r"#UFC\w+\s+[Oo]ff?i?c?i?a?l?\s+[Rr]esult(?:\s*&\s*[Ss]corecard)?:\s*([\w\s\'\-\.]+?)\s+vs\s+([\w\s\'\-\.]+?)\s+ruled\s+a\s+no\s+contest"
+    ]
     
-    match = re.search(pattern, text, re.IGNORECASE)
-    if match:
-        winner, loser = match.groups()
-        winner = clean_name(winner)
-        loser = clean_name(loser)
-        print(f"Found fighters: Winner - {winner}, Loser - {loser}")
-        return (winner, loser)
+    first_line = text.split('\n')[0]
+    for pattern in patterns:
+        match = re.search(pattern, first_line, re.IGNORECASE)
+        if match:
+            fighter1, fighter2 = match.groups()
+            fighter1 = clean_name(fighter1)
+            fighter2 = clean_name(fighter2)
+            return (fighter1, fighter2)
     
-    print("No fighters found in result tweet")
+    print(f"No fighters found in result tweet: {first_line}")
     return None
+
+def extract_first_names(tuple_of_names):
+    """
+    Extracts first names of the fighters from a tuple of full names.
+    Returns a tuple of lowercase first names or None if input is invalid.
+    """
+    if tuple_of_names is None:
+        return None
+        
+    first_name1 = tuple_of_names[0].split()[0].lower()
+    first_name2 = tuple_of_names[1].split()[0].lower()
+    
+    return (first_name1, first_name2)
+
+
