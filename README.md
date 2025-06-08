@@ -1,4 +1,4 @@
-# 🥊 FightLive v1.0.0
+# FightLive v1.1
 
 Stay updated with the latest UFC fight results and scorecards directly in your Discord server! 
 
