@@ -21,7 +21,7 @@ FightLive is a streamlined tool that fetches live updates from @UFCNews on twitt
    ```
    WEBHOOK_URL=your_discord_webhook_url
    AUTH_TOKEN=your_twitter_auth_token
-   X_ACCOUNT=official_ufc_account
+   X_ACCOUNT=UFCNews
    ```
 3. **Install dependencies**
    ```bash  
