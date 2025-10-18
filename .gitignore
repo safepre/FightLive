@@ -5,7 +5,7 @@ __pycache__/
 
 # C extensions
 *.so
-
+session.tw_session
 # Distribution / packaging
 .Python
 build/
