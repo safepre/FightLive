@@ -1,5 +1,5 @@
 import time
-from src.config import CHECK_INTERVAL, X_ACCOUNT
+from src.config import CHECK_INTERVAL
 from src.twitter_client import TwitterClient
 from src.text_processing import extract_scorecard, extract_official_results, finish_by_round_one,extract_first_names, extract_scorecard_names, extract_result_names, is_first_round_finish,extract_result_fighters
 from src.discord_client import send_to_discord
