@@ -7,6 +7,3 @@ DISCORD_WEBHOOK_URL = os.getenv("WEBHOOK_URL")
 AUTH_TOKEN = os.getenv("AUTH_TOKEN")
 CHECK_INTERVAL = 900 
 
-X_ACCOUNT = os.getenv("X_ACCOUNT")
-
-
